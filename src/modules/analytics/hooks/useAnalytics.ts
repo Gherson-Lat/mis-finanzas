@@ -1,12 +1,39 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { FinancialAlert } from '../../../shared/types';
-import { ANALYTICS_ALERTS_MOCK, ANALYTICS_SUMMARY_MOCK } from '../data/analytics.mock';
+import {
+  ANALYTICS_BUDGETS_MOCK,
+  ANALYTICS_CURRENT_MONTH,
+  ANALYTICS_TRANSACTIONS_MOCK,
+} from '../data/analytics.mock';
+import { AnalyticsSummary, CategoryExpense } from '../types/analytics.types';
+import {
+  buildAlerts,
+  calculateSummary,
+  calculateTopCategories,
+  filterByMonth,
+} from '../utils/analytics.utils';
 
-export function useAnalytics() {
-  const [summary] = useState(ANALYTICS_SUMMARY_MOCK);
-  const [alerts] = useState<FinancialAlert[]>(ANALYTICS_ALERTS_MOCK);
-  const netBalance = summary.income - summary.expense;
+interface UseAnalyticsResult {
+  month: string;
+  summary: AnalyticsSummary;
+  netBalance: number;
+  topCategories: CategoryExpense[];
+  alerts: FinancialAlert[];
+}
 
-  // TODO (Dev 4): calcular top categorías y reglas de alertas
-  return { summary, netBalance, alerts };
+export function useAnalytics(): UseAnalyticsResult {
+  return useMemo(() => {
+    const monthTransactions = filterByMonth(ANALYTICS_TRANSACTIONS_MOCK, ANALYTICS_CURRENT_MONTH);
+    const monthBudgets = ANALYTICS_BUDGETS_MOCK.filter((b) => b.month === ANALYTICS_CURRENT_MONTH);
+
+    const summary = calculateSummary(monthTransactions);
+
+    return {
+      month: ANALYTICS_CURRENT_MONTH,
+      summary,
+      netBalance: summary.income - summary.expense,
+      topCategories: calculateTopCategories(monthTransactions),
+      alerts: buildAlerts(monthBudgets, summary),
+    };
+  }, []);
 }
