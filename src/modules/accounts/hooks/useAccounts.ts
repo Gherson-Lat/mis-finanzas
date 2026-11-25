@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Account } from '../../../shared/types';
 import { ACCOUNTS_MOCK } from '../data/accounts.mock';
